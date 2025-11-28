@@ -18,6 +18,11 @@ class GamePiece extends HTMLElement {
         align-items: center;
         font-weight: bold;
         color: white;
+        animation: popIn 0.2s ease-out;
+      }
+      @keyframes popIn {
+        from { transform: scale(0); opacity: 0; }
+        to { transform: scale(1); opacity: 1; }
       }
       .black {
         background-color: black;

@@ -32,22 +32,22 @@ This document outlines the step-by-step plan to build the browser-based implemen
     - [x] Add coordinate labels (1-6, A-F).
 - [x] **Piece Rendering**:
     - [x] Display Black and White stones visually.
-- [ ] **Interactivity**:
-    - [ ] Click to select piece.
-    - [ ] Highlight valid move destinations.
-    - [ ] Click destination to move.
-- [ ] **Game Info Display**:
-    - [ ] Current Turn indicator.
-    - [ ] Game Over message with Winner announcement.
-    - [ ] Restart/Reset button.
+- [x] **Interactivity**:
+    - [x] Click to select piece.
+    - [x] Highlight valid move destinations.
+    - [x] Click destination to move.
+- [x] **Game Info Display**:
+    - [x] Current Turn indicator.
+    - [x] Game Over message with Winner announcement.
+    - [x] Restart/Reset button.
 
 ## Phase 4: Polish & Testing
-- [ ] **Unit Tests**:
-    - [ ] Test Ayumi/Koshi movement edge cases.
-    - [ ] Test Win detection (valid vs invalid rectangles).
-    - [ ] Test Ko rule blocking.
-- [ ] **UI Polish**:
-    - [ ] Add simple animations for movement.
-    - [ ] Responsive design adjustments.
-- [ ] **Documentation**:
-    - [ ] Update README with "How to Run".
+- [x] **Unit Tests**:
+    - [x] Test Ayumi/Koshi movement edge cases.
+    - [x] Test Win detection (valid vs invalid rectangles).
+    - [x] Test Ko rule blocking.
+- [x] **UI Polish**:
+    - [x] Add simple animations for movement.
+    - [x] Responsive design adjustments.
+- [x] **Documentation**:
+    - [x] Update README with "How to Run".
