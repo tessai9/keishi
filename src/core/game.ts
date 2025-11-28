@@ -1,4 +1,4 @@
-import { createInitialBoard, BOARD_SIZE } from './board';
+import { createInitialBoard } from './board';
 import type { Board, Coordinates, GameState, PlayerColor } from './types';
 import { getValidMoves } from './movement';
 

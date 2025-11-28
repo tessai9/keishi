@@ -44,7 +44,7 @@ class GamePiece extends HTMLElement {
     return ['color'];
   }
 
-  attributeChangedCallback(name: string, oldValue: string, newValue: string) {
+  attributeChangedCallback(name: string, _oldValue: string, newValue: string) {
     if (name === 'color') {
       this.color = newValue as PlayerColor;
     }
