@@ -27,11 +27,11 @@ This document outlines the step-by-step plan to build the browser-based implemen
     - [x] Implement Sennichite (Ko) check to prevent immediate repetition.
 
 ## Phase 3: UI Development
-- [ ] **Grid Rendering**:
-    - [ ] Create a 6x6 grid display.
-    - [ ] Add coordinate labels (1-6, A-F).
-- [ ] **Piece Rendering**:
-    - [ ] Display Black and White stones visually.
+- [x] **Grid Rendering**:
+    - [x] Create a 6x6 grid display.
+    - [x] Add coordinate labels (1-6, A-F).
+- [x] **Piece Rendering**:
+    - [x] Display Black and White stones visually.
 - [ ] **Interactivity**:
     - [ ] Click to select piece.
     - [ ] Highlight valid move destinations.

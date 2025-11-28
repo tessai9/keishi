@@ -1,4 +1,4 @@
-import { Board, PlayerColor, Coordinates } from './types';
+import type { Board, PlayerColor, Coordinates } from './types';
 import { BOARD_SIZE } from './board';
 
 export function getPlayerStones(board: Board, player: PlayerColor): Coordinates[] {

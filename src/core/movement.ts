@@ -1,4 +1,4 @@
-import { Board, Coordinates } from './types';
+import type { Board, Coordinates } from './types';
 import { BOARD_SIZE } from './board';
 
 export const DIRECTIONS = [

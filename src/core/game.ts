@@ -1,5 +1,5 @@
 import { createInitialBoard, BOARD_SIZE } from './board';
-import { Board, Coordinates, GameState, PlayerColor } from './types';
+import type { Board, Coordinates, GameState, PlayerColor } from './types';
 import { getValidMoves } from './movement';
 
 export function createInitialState(): GameState {

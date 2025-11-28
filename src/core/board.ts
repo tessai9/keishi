@@ -1,4 +1,4 @@
-import { Board, Cell, PlayerColor } from './types';
+import type { Board, Cell } from './types';
 
 export const BOARD_SIZE = 6;
 
