@@ -27,7 +27,9 @@ describe('Ko Rule (Sennichite)', () => {
       board: board,
       turn: 'black',
       winner: null,
-      history: [nextBoardStr]
+      history: [nextBoardStr],
+      phase: 'movement',
+      stonesPlaced: { black: 4, white: 4 }
     };
     
     const legalMoves = getLegalMoves(gameState, { x: 0, y: 0 });

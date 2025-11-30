@@ -15,20 +15,5 @@ export function createEmptyBoard(): Board {
 }
 
 export function createInitialBoard(): Board {
-  const board = createEmptyBoard();
-
-  // Initial Setup
-  // Black: A2, B2, E2, F2 -> y=1; x=0, 1, 4, 5
-  // White: A5, B5, E5, F5 -> y=4; x=0, 1, 4, 5
-
-  const blackRow = 1;
-  const whiteRow = 4;
-  const cols = [0, 1, 4, 5];
-
-  cols.forEach((x) => {
-    board[blackRow][x] = 'black';
-    board[whiteRow][x] = 'white';
-  });
-
-  return board;
+  return createEmptyBoard();
 }

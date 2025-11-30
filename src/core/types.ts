@@ -9,9 +9,16 @@ export type Cell = PlayerColor | null;
 
 export type Board = Cell[][];
 
+export type GamePhase = 'placement' | 'movement';
+
 export interface GameState {
   board: Board;
   turn: PlayerColor;
   winner: PlayerColor | null;
   history: string[]; // For Ko rule enforcement (board state hashes)
+  phase: GamePhase;
+  stonesPlaced: {
+    black: number;
+    white: number;
+  };
 }

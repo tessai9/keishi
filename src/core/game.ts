@@ -1,6 +1,9 @@
 import { createInitialBoard } from './board';
 import type { Board, Coordinates, GameState, PlayerColor } from './types';
+import { checkWin } from './win-logic';
 import { getValidMoves } from './movement';
+
+const STONES_PER_PLAYER = 4;
 
 export function createInitialState(): GameState {
   return {
@@ -8,6 +11,8 @@ export function createInitialState(): GameState {
     turn: 'black',
     winner: null,
     history: [],
+    phase: 'placement',
+    stonesPlaced: { black: 0, white: 0 },
   };
 }
 
@@ -19,6 +24,9 @@ export function serializeBoard(board: Board): string {
   return JSON.stringify(board);
 }
 
+// Re-implementing isKo and getLegalMoves here or importing?
+// Previously they were in this file. I will keep them.
+
 export function isKo(history: string[], nextBoard: Board): boolean {
   if (history.length === 0) return false;
   const lastState = history[history.length - 1];
@@ -26,6 +34,8 @@ export function isKo(history: string[], nextBoard: Board): boolean {
 }
 
 export function getLegalMoves(state: GameState, start: Coordinates): Coordinates[] {
+  if (state.phase !== 'movement') return [];
+  
   const validMoves = getValidMoves(state.board, start);
   return validMoves.filter((move) => {
     // Simulate move to check for Ko
@@ -38,7 +48,60 @@ export function getLegalMoves(state: GameState, start: Coordinates): Coordinates
   });
 }
 
+export function placeStone(state: GameState, at: Coordinates): GameState {
+  if (state.phase !== 'placement') {
+    throw new Error('Cannot place stone in movement phase');
+  }
+  if (state.board[at.y][at.x] !== null) {
+    throw new Error('Cell is already occupied');
+  }
+  
+  const newState: GameState = {
+    ...state,
+    board: state.board.map(row => [...row]),
+    stonesPlaced: { ...state.stonesPlaced }
+  };
+
+  // Place stone
+  const currentPlayer = newState.turn;
+  newState.board[at.y][at.x] = currentPlayer;
+  newState.stonesPlaced[currentPlayer]++;
+
+  // Check Win (Instant win allowed in placement)
+  if (checkWin(newState.board, currentPlayer)) {
+    newState.winner = currentPlayer;
+    return newState;
+  }
+
+  // Check Phase Transition
+  if (newState.stonesPlaced.black === STONES_PER_PLAYER && newState.stonesPlaced.white === STONES_PER_PLAYER) {
+    newState.phase = 'movement';
+    // Rule: "Movement phase starts with White"
+    newState.turn = 'white';
+    
+    // Initialize history for Ko rule from this point?
+    // Ko rule prevents returning to *previous* state.
+    // Starting movement phase, there is no "previous movement state".
+    // We can keep history or clear it. Usually clear or treat current board as start.
+    // Let's keep history as board states, but Ko only matters for movement.
+    // We should probably push the current state to history so the first move has something to compare?
+    // But Ko says "restore to 1 move ago". First move cannot restore anything.
+    // Let's just reset history to be safe/clean for the movement phase.
+    newState.history = [serializeBoard(newState.board)]; 
+    
+  } else {
+    // Continue Placement
+    newState.turn = switchTurn(currentPlayer);
+  }
+
+  return newState;
+}
+
 export function makeMove(state: GameState, from: Coordinates, to: Coordinates): GameState {
+  if (state.phase !== 'movement') {
+    throw new Error('Cannot move stone in placement phase');
+  }
+
   // Deep copy state to avoid mutation
   const newState: GameState = {
     ...state,
@@ -55,22 +118,7 @@ export function makeMove(state: GameState, from: Coordinates, to: Coordinates): 
   newState.board[from.y][from.x] = null;
   newState.board[to.y][to.x] = piece;
 
-  // Update history (store the state BEFORE the move? or AFTER?)
-  // Ko check usually compares result with previous states.
-  // We should store the board state *before* this move was made,
-  // or better, store the sequence of board states.
-  // Let's store the state *resulting* from this move?
-  // Actually, to check "cannot return to 1 move ago", we need to see if the NEW board matches
-  // the board from 2 moves ago (start of previous turn).
-  
-  // Let's store the board state at the beginning of the turn (before move).
-  // Then after move, we check if new board matches any forbidden state.
-  // "Ko" usually only forbids the *immediate* previous state (S_n-1).
-  // Wait, if I am at S_n, and I move to S_n+1.
-  // My opponent was at S_n-1. They moved to S_n.
-  // I cannot move to S_n-1.
-  
-  // So, before making the move, we record the current board (S_n).
+  // Update history
   newState.history.push(serializeBoard(state.board));
 
   // Switch turn

@@ -1,4 +1,4 @@
-import { createInitialState, getLegalMoves, makeMove } from '../core/game';
+import { createInitialState, getLegalMoves, makeMove, placeStone } from '../core/game';
 import { checkWin } from '../core/win-logic';
 import './game-piece'; 
 import type { PlayerColor, Coordinates, GameState } from '../core/types';
@@ -51,6 +51,11 @@ class BoardGrid extends HTMLElement {
         background-color: rgba(0,0,0,0.2);
         border-radius: 50%;
       }
+      /* Hover effect for placement phase */
+      .cell.empty:hover {
+        background-color: #ddd;
+        cursor: pointer;
+      }
       .coord-label {
         background-color: #ccc;
         display: flex;
@@ -90,9 +95,7 @@ class BoardGrid extends HTMLElement {
     shadow.appendChild(resetButton); // Append button
     shadow.appendChild(boardContainer);
     
-    // Initial structure setup (labels) happens in render or constructor?
-    // Structure is static, content is dynamic.
-    // Let's build static structure once.
+    // Initial structure setup (labels)
     
     // Empty corner
     const emptyCorner = document.createElement('div');
@@ -145,25 +148,39 @@ class BoardGrid extends HTMLElement {
     const y = parseInt(target.dataset.y!, 10);
     const clickedCoord = { x, y };
 
-    // Check if clicked cell is a valid move destination
-    const isMoveDest = this.legalMoves.some(m => m.x === x && m.y === y);
-
-    if (isMoveDest && this.selected) {
-      // Execute Move
-      this.executeMove(this.selected, clickedCoord);
-    } else {
-      // Select logic
-      const piece = this.gameState.board[y][x];
-      if (piece === this.gameState.turn) {
-        // Select own piece
-        this.selected = clickedCoord;
-        this.legalMoves = getLegalMoves(this.gameState, clickedCoord);
-      } else {
-        // Clicked empty or enemy piece (not a move dest) -> Deselect
-        this.selected = null;
-        this.legalMoves = [];
+    if (this.gameState.phase === 'placement') {
+      // Placement Phase Logic
+      try {
+        const newState = placeStone(this.gameState, clickedCoord);
+        this.gameState = newState;
+        this.render();
+      } catch (e) {
+        // Ignore invalid placements (e.g. occupied cell)
+        console.log('Invalid placement:', e);
       }
-      this.render();
+    } else {
+      // Movement Phase Logic
+      
+      // Check if clicked cell is a valid move destination
+      const isMoveDest = this.legalMoves.some(m => m.x === x && m.y === y);
+
+      if (isMoveDest && this.selected) {
+        // Execute Move
+        this.executeMove(this.selected, clickedCoord);
+      } else {
+        // Select logic
+        const piece = this.gameState.board[y][x];
+        if (piece === this.gameState.turn) {
+          // Select own piece
+          this.selected = clickedCoord;
+          this.legalMoves = getLegalMoves(this.gameState, clickedCoord);
+        } else {
+          // Clicked empty or enemy piece (not a move dest) -> Deselect
+          this.selected = null;
+          this.legalMoves = [];
+        }
+        this.render();
+      }
     }
   }
 
@@ -173,9 +190,12 @@ class BoardGrid extends HTMLElement {
       const newState = makeMove(this.gameState, from, to);
       
       // Check Win (for the player who just moved - which is previous turn)
-      const justMovedPlayer = this.gameState.turn;
-      if (checkWin(newState.board, justMovedPlayer)) {
-        newState.winner = justMovedPlayer;
+      // newState.turn has already switched, so we check win for the player who JUST moved.
+      // E.g. Black moved. turn is White. Check win for Black.
+      const playerWhoMoved = newState.turn === 'black' ? 'white' : 'black';
+      
+      if (checkWin(newState.board, playerWhoMoved)) {
+        newState.winner = playerWhoMoved;
       }
       
       this.gameState = newState;
@@ -200,7 +220,8 @@ class BoardGrid extends HTMLElement {
         statusDiv.textContent = `Winner: ${this.gameState.winner.toUpperCase()}!`;
         statusDiv.style.color = 'red';
       } else {
-        statusDiv.textContent = `Turn: ${this.gameState.turn.toUpperCase()}`;
+        const phaseName = this.gameState.phase === 'placement' ? 'Placement' : 'Movement';
+        statusDiv.textContent = `Phase: ${phaseName} | Turn: ${this.gameState.turn.toUpperCase()}`;
         statusDiv.style.color = '';
       }
     }
@@ -212,7 +233,7 @@ class BoardGrid extends HTMLElement {
       const y = parseInt(cell.dataset.y!, 10);
       
       // Reset classes/content
-      cell.classList.remove('selected', 'valid-move');
+      cell.classList.remove('selected', 'valid-move', 'empty');
       cell.innerHTML = '';
 
       // Place Piece
@@ -221,6 +242,8 @@ class BoardGrid extends HTMLElement {
         const piece = document.createElement('game-piece') as HTMLElement & { color: PlayerColor };
         piece.color = pieceColor;
         cell.appendChild(piece);
+      } else {
+        cell.classList.add('empty');
       }
 
       // Highlight Selected
