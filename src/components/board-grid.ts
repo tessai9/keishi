@@ -1,4 +1,4 @@
-import { createInitialState, getLegalMoves, makeMove, placeStone } from '../core/game';
+import { createInitialState, getLegalMoves, makeMove } from '../core/game';
 import { checkWin } from '../core/win-logic';
 import './game-piece'; 
 import type { PlayerColor, Coordinates, GameState } from '../core/types';
@@ -51,11 +51,7 @@ class BoardGrid extends HTMLElement {
         background-color: rgba(0,0,0,0.2);
         border-radius: 50%;
       }
-      /* Hover effect for placement phase */
-      .cell.empty:hover {
-        background-color: #ddd;
-        cursor: pointer;
-      }
+
       .coord-label {
         background-color: #ccc;
         display: flex;
@@ -114,7 +110,7 @@ class BoardGrid extends HTMLElement {
     for (let y = 0; y < BOARD_SIZE; y++) {
       const rowLabel = document.createElement('div');
       rowLabel.classList.add('coord-label');
-      rowLabel.textContent = (y + 1).toString();
+      rowLabel.textContent = (BOARD_SIZE - y).toString();
       boardContainer.appendChild(rowLabel);
 
       for (let x = 0; x < BOARD_SIZE; x++) {
@@ -148,39 +144,27 @@ class BoardGrid extends HTMLElement {
     const y = parseInt(target.dataset.y!, 10);
     const clickedCoord = { x, y };
 
-    if (this.gameState.phase === 'placement') {
-      // Placement Phase Logic
-      try {
-        const newState = placeStone(this.gameState, clickedCoord);
-        this.gameState = newState;
-        this.render();
-      } catch (e) {
-        // Ignore invalid placements (e.g. occupied cell)
-        console.log('Invalid placement:', e);
-      }
-    } else {
-      // Movement Phase Logic
-      
-      // Check if clicked cell is a valid move destination
-      const isMoveDest = this.legalMoves.some(m => m.x === x && m.y === y);
+    // Movement Logic
+    
+    // Check if clicked cell is a valid move destination
+    const isMoveDest = this.legalMoves.some(m => m.x === x && m.y === y);
 
-      if (isMoveDest && this.selected) {
-        // Execute Move
-        this.executeMove(this.selected, clickedCoord);
+    if (isMoveDest && this.selected) {
+      // Execute Move
+      this.executeMove(this.selected, clickedCoord);
+    } else {
+      // Select logic
+      const piece = this.gameState.board[y][x];
+      if (piece === this.gameState.turn) {
+        // Select own piece
+        this.selected = clickedCoord;
+        this.legalMoves = getLegalMoves(this.gameState, clickedCoord);
       } else {
-        // Select logic
-        const piece = this.gameState.board[y][x];
-        if (piece === this.gameState.turn) {
-          // Select own piece
-          this.selected = clickedCoord;
-          this.legalMoves = getLegalMoves(this.gameState, clickedCoord);
-        } else {
-          // Clicked empty or enemy piece (not a move dest) -> Deselect
-          this.selected = null;
-          this.legalMoves = [];
-        }
-        this.render();
+        // Clicked empty or enemy piece (not a move dest) -> Deselect
+        this.selected = null;
+        this.legalMoves = [];
       }
+      this.render();
     }
   }
 
@@ -220,8 +204,7 @@ class BoardGrid extends HTMLElement {
         statusDiv.textContent = `Winner: ${this.gameState.winner.toUpperCase()}!`;
         statusDiv.style.color = 'red';
       } else {
-        const phaseName = this.gameState.phase === 'placement' ? 'Placement' : 'Movement';
-        statusDiv.textContent = `Phase: ${phaseName} | Turn: ${this.gameState.turn.toUpperCase()}`;
+        statusDiv.textContent = `Turn: ${this.gameState.turn.toUpperCase()}`;
         statusDiv.style.color = '';
       }
     }
