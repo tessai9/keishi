@@ -1,6 +1,5 @@
 import { createInitialBoard } from './board';
 import type { Board, Coordinates, GameState, PlayerColor } from './types';
-import { checkWin } from './win-logic';
 import { getValidMoves } from './movement';
 
 export function createInitialState(): GameState {
