@@ -2,8 +2,8 @@ import { createInitialBoard } from './board';
 import type { Board, Coordinates, GameState, PlayerColor } from './types';
 import { getValidMoves } from './movement';
 
-export function createInitialState(): GameState {
-  const board = createInitialBoard();
+export function createInitialState(configId: string = 'default'): GameState {
+  const board = createInitialBoard(configId);
   return {
     board,
     turn: 'black',

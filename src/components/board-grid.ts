@@ -1,6 +1,7 @@
 import { createInitialState, getLegalMoves, makeMove } from '../core/game';
 import { checkWin } from '../core/win-logic';
-import './game-piece'; 
+import { INITIAL_CONFIGS } from '../core/board';
+import './game-piece';
 import type { PlayerColor, Coordinates, GameState } from '../core/types';
 
 const BOARD_SIZE = 6;
@@ -10,6 +11,7 @@ class BoardGrid extends HTMLElement {
   private gameState: GameState;
   private selected: Coordinates | null = null;
   private legalMoves: Coordinates[] = []; // Cache legal moves for selected piece
+  private currentConfigId: string = 'default';
 
   constructor() {
     super();
@@ -67,6 +69,26 @@ class BoardGrid extends HTMLElement {
         font-size: 1.2rem;
         font-weight: bold;
       }
+      .controls {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        margin-bottom: 10px;
+        flex-wrap: wrap;
+      }
+      .config-select {
+        padding: 5px 10px;
+        font-size: 1rem;
+        border: 1px solid #333;
+        border-radius: 4px;
+        background-color: #fff;
+        cursor: pointer;
+      }
+      .config-description {
+        font-size: 0.85rem;
+        color: #666;
+        margin-bottom: 10px;
+      }
     `;
 
     // Status display
@@ -74,11 +96,37 @@ class BoardGrid extends HTMLElement {
     statusDiv.classList.add('status');
     statusDiv.id = 'status';
 
+    // Controls container
+    const controlsDiv = document.createElement('div');
+    controlsDiv.classList.add('controls');
+
+    // Config selector
+    const configSelect = document.createElement('select');
+    configSelect.classList.add('config-select');
+    configSelect.id = 'config-select';
+    INITIAL_CONFIGS.forEach(config => {
+      const option = document.createElement('option');
+      option.value = config.id;
+      option.textContent = config.name;
+      configSelect.appendChild(option);
+    });
+    configSelect.addEventListener('change', (e) => {
+      this.currentConfigId = (e.target as HTMLSelectElement).value;
+      this.updateConfigDescription();
+    });
+
     // Reset Button
     const resetButton = document.createElement('button');
     resetButton.textContent = 'Reset Game';
-    resetButton.style.marginBottom = '10px';
     resetButton.addEventListener('click', () => this.resetGame());
+
+    controlsDiv.appendChild(configSelect);
+    controlsDiv.appendChild(resetButton);
+
+    // Config description
+    const configDescDiv = document.createElement('div');
+    configDescDiv.classList.add('config-description');
+    configDescDiv.id = 'config-description';
 
     const boardContainer = document.createElement('div');
     boardContainer.classList.add('board-container');
@@ -88,7 +136,8 @@ class BoardGrid extends HTMLElement {
 
     shadow.appendChild(style);
     shadow.appendChild(statusDiv);
-    shadow.appendChild(resetButton); // Append button
+    shadow.appendChild(controlsDiv);
+    shadow.appendChild(configDescDiv);
     shadow.appendChild(boardContainer);
     
     // Initial structure setup (labels)
@@ -124,11 +173,23 @@ class BoardGrid extends HTMLElement {
   }
 
   connectedCallback() {
+    this.updateConfigDescription();
     this.render();
   }
 
+  private updateConfigDescription() {
+    const shadow = this.shadowRoot;
+    if (!shadow) return;
+
+    const descDiv = shadow.getElementById('config-description');
+    if (descDiv) {
+      const config = INITIAL_CONFIGS.find(c => c.id === this.currentConfigId);
+      descDiv.textContent = config?.description ?? '';
+    }
+  }
+
   private resetGame() {
-    this.gameState = createInitialState();
+    this.gameState = createInitialState(this.currentConfigId);
     this.selected = null;
     this.legalMoves = [];
     this.render();
