@@ -21,3 +21,23 @@ body {
     font-weight: bold;
   }
 }
+
+.mode-btn {
+  padding: 12px 24px;
+  font-size: 1.1rem;
+  font-family: monospace;
+  font-weight: bold;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  background: #4caf50;
+  color: white;
+}
+
+.mode-btn:hover {
+  opacity: 0.9;
+}
+
+.mode-btn.secondary {
+  background: #555;
+}

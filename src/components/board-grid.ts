@@ -10,8 +10,13 @@ const COLUMN_LABELS = ['A', 'B', 'C', 'D', 'E', 'F'];
 class BoardGrid extends HTMLElement {
   private gameState: GameState;
   private selected: Coordinates | null = null;
-  private legalMoves: Coordinates[] = []; // Cache legal moves for selected piece
+  private legalMoves: Coordinates[] = [];
   private currentConfigId: string = 'default';
+
+  private _localPlayer: PlayerColor | null = null;
+  private _onMoveExecuted:
+    | ((from: Coordinates, to: Coordinates, newState: GameState) => void)
+    | null = null;
 
   constructor() {
     super();
@@ -172,9 +177,38 @@ class BoardGrid extends HTMLElement {
     }
   }
 
+  set localPlayer(color: PlayerColor | null) {
+    this._localPlayer = color;
+    this.updateControlsVisibility();
+    this.render();
+  }
+
+  set onMoveExecuted(
+    cb: ((from: Coordinates, to: Coordinates, newState: GameState) => void) | null,
+  ) {
+    this._onMoveExecuted = cb;
+  }
+
+  applyRemoteState(state: GameState) {
+    this.gameState = state;
+    this.selected = null;
+    this.legalMoves = [];
+    this.render();
+  }
+
   connectedCallback() {
     this.updateConfigDescription();
+    this.updateControlsVisibility();
     this.render();
+  }
+
+  private updateControlsVisibility() {
+    const shadow = this.shadowRoot;
+    if (!shadow) return;
+    const controls = shadow.querySelector('.controls') as HTMLElement | null;
+    const desc = shadow.getElementById('config-description');
+    if (controls) controls.style.display = this._localPlayer ? 'none' : '';
+    if (desc) desc.style.display = this._localPlayer ? 'none' : '';
   }
 
   private updateConfigDescription() {
@@ -196,7 +230,8 @@ class BoardGrid extends HTMLElement {
   }
 
   private handleCellClick(event: Event) {
-    if (this.gameState.winner) return; // Game over
+    if (this.gameState.winner) return;
+    if (this._localPlayer && this.gameState.turn !== this._localPlayer) return;
 
     const target = (event.target as HTMLElement).closest('.cell') as HTMLElement;
     if (!target) return;
@@ -247,7 +282,10 @@ class BoardGrid extends HTMLElement {
       this.selected = null;
       this.legalMoves = [];
       this.render();
-      
+
+      if (this._onMoveExecuted) {
+        this._onMoveExecuted(from, to, newState);
+      }
     } catch (e) {
       console.error(e);
       alert('Invalid move!');
@@ -262,8 +300,19 @@ class BoardGrid extends HTMLElement {
     const statusDiv = shadow.getElementById('status');
     if (statusDiv) {
       if (this.gameState.winner) {
-        statusDiv.textContent = `Winner: ${this.gameState.winner.toUpperCase()}!`;
+        if (this._localPlayer) {
+          const won = this.gameState.winner === this._localPlayer;
+          statusDiv.textContent = won ? 'You Win!' : 'You Lose...';
+        } else {
+          statusDiv.textContent = `Winner: ${this.gameState.winner.toUpperCase()}!`;
+        }
         statusDiv.style.color = 'red';
+      } else if (this._localPlayer) {
+        const myTurn = this.gameState.turn === this._localPlayer;
+        statusDiv.textContent = myTurn
+          ? 'あなたのターンです'
+          : '相手のターンです...';
+        statusDiv.style.color = myTurn ? '#4caf50' : '#aaa';
       } else {
         statusDiv.textContent = `Turn: ${this.gameState.turn.toUpperCase()}`;
         statusDiv.style.color = '';
